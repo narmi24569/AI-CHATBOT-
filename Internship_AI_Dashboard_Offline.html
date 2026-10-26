@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Internship AI Dashboard</title>
+<style>
+:root{--bg:#3b0764;--card:rgba(255,255,255,.1);--ink:#fff;--mute:#dcccf7;--line:rgba(255,255,255,.22);--pri:#ec4899;--priInk:#fff;--ok:#4ade80;--warn:#fb923c;--bad:#fda4af;--bub:rgba(255,255,255,.14);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.app{display:grid;grid-template-columns:290px 1fr;gap:16px;max-width:1200px;margin:0 auto;padding:16px}
+@media(max-width:860px){.app{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
+h1{font-size:20px;margin:0}h2{font-size:15px;margin:0 0 10px}
+.mute{color:var(--mute);font-size:13px}
+.avatar{width:52px;height:52px;border-radius:50%;background:var(--pri);color:var(--priInk);display:grid;place-items:center;font-weight:700;font-size:20px}
+.row{display:flex;gap:10px;align-items:center}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.stat b{display:block;font-size:22px}
+.bar{height:8px;background:var(--line);border-radius:6px;overflow:hidden;margin:8px 0}
+.bar i{display:block;height:100%;background:var(--pri);width:0;transition:width .4s}
+ul.road{list-style:none;margin:0;padding:0}
+ul.road li{display:flex;gap:8px;padding:7px 8px;border-radius:8px;font-size:13px}
+ul.road li.cur{background:var(--bub);font-weight:600}
+ul.road li.done{color:var(--mute)}
+ul.road li span.n{width:22px;height:22px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;font-size:11px;flex:none}
+ul.road li.done span.n{background:var(--ok);color:#fff;border-color:var(--ok)}
+ul.road li.cur span.n{background:var(--pri);color:var(--priInk);border-color:var(--pri)}
+.tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:none;color:var(--ink);padding:7px 14px;border-radius:20px;cursor:pointer;font:inherit}
+.tab.on{background:var(--pri);color:var(--priInk);border-color:var(--pri)}
+.pane{display:none}.pane.on{display:block}
+#msgs{height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:4px 2px;margin-bottom:10px}
+.m{max-width:88%;padding:10px 13px;border-radius:14px;overflow-wrap:anywhere}
+.m.bot{background:var(--bub);align-self:flex-start;border-bottom-left-radius:4px}
+.m.me{background:var(--pri);color:var(--priInk);align-self:flex-end;border-bottom-right-radius:4px}
+.m code{background:rgba(127,127,127,.2);padding:1px 5px;border-radius:4px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.chip{font:inherit;font-size:12px;border:1px solid var(--line);background:none;color:var(--ink);padding:5px 10px;border-radius:14px;cursor:pointer}
+.chip:hover{border-color:var(--pri)}
+.in{display:flex;gap:8px}
+input,textarea{flex:1;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;min-width:0}
+textarea{width:100%;min-height:170px;resize:vertical;font-family:ui-monospace,Consolas,monospace;font-size:13px}
+button.go{font:inherit;background:var(--pri);color:var(--priInk);border:0;border-radius:10px;padding:10px 18px;cursor:pointer;font-weight:600}
+button:disabled{opacity:.5;cursor:default}
+.badge{display:inline-block;padding:3px 12px;border-radius:14px;font-weight:700;font-size:13px}
+.pass{background:var(--ok);color:#fff}.revise{background:var(--warn);color:#fff}
+.mis{border-left:3px solid var(--bad);padding:6px 10px;margin:8px 0;background:var(--bg);border-radius:0 8px 8px 0;font-size:14px}
+pre.mail{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;font:13px/1.5 ui-monospace,Consolas,monospace;overflow-wrap:anywhere}
+.reg{max-width:520px;margin:40px auto}.reg label{display:block;margin:10px 0 4px;font-size:13px;color:var(--mute)}.reg input,.reg select{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px}.err{color:var(--bad);font-size:13px;min-height:18px;margin-top:8px}.hide{display:none!important}.task{background:var(--bub);border-radius:10px;padding:10px 12px;margin:10px 0;font-size:13px}.note{font-size:13px;color:var(--mute);margin-top:8px}
+.dots span{display:inline-block;width:6px;height:6px;margin:0 2px;border-radius:50%;background:var(--mute);animation:b 1s infinite}
+.dots span:nth-child(2){animation-delay:.15s}.dots span:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,80%,100%{opacity:.3}40%{opacity:1}}
+
+body{background:linear-gradient(160deg,#3b0764,#5b21b6 55%,#6d28d9) fixed;min-height:100vh}
+.card{border-color:rgba(255,255,255,.22);backdrop-filter:blur(6px)}
+.m.bot{background:linear-gradient(#fff,#eceef1);color:#374151;border:1px solid #d1d5db}
+.m.me{background:linear-gradient(135deg,#f9a8d4,#ec4899);color:#fff}
+.m code{background:#e5e7eb;color:#374151}
+.m.bot pre.mail{background:#f3f4f6;color:#374151;border-color:#d1d5db}
+.reg input,.reg select,input,textarea,select{background:rgba(255,255,255,.96);color:#1f2937;border:1px solid transparent}
+::placeholder{color:#9ca3af}
+.card pre.mail{background:#fff;color:#374151;border-color:#e5e7eb}
+.pass{color:#052e16}.revise{color:#431407}
+a.go{display:inline-block;text-decoration:none}
+.mis{background:rgba(0,0,0,.25);border-left-color:#f9a8d4}
+.pri{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:6px;background:#fff;color:#6d28d9}
+.pri.high{background:#ec4899;color:#fff}
+.sc{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}.sc div{background:var(--bub);border-radius:10px;padding:6px 12px}
+.chip{color:#fff;border-color:rgba(255,255,255,.4)}
+</style>
+</head>
+<body>
+<div class="reg card" id="reg">
+  <h1>🎓 Internship Portal</h1>
+  <p class="mute">Enter your details. The bot will assign the task meant for you and set up your 8-week plan.</p>
+  <label>Full name</label><input id="rn" autocomplete="name">
+  <label>Email ID</label><input id="re" type="email" autocomplete="email">
+  <label>College name</label><input id="rc">
+  <label>Department</label>
+  <select id="rd2"><option>CSE</option><option>IT</option><option>AI &amp; DS / AI &amp; ML</option><option selected>ECE</option><option>EEE</option><option>EIE / Instrumentation</option><option>Mechanical</option><option>Civil</option><option>Other</option></select>
+  <label>Year of study</label>
+  <select id="ry"><option>I</option><option>II</option><option>III</option><option selected>IV</option></select>
+  <div class="err" id="rerr"></div>
+  <button class="go" id="rgo" style="width:100%;margin-top:6px">Get my task</button>
+  <p class="note">Same details = same task. Returning candidates get their saved progress back on this device.</p>
+</div>
+
+<div class="app hide" id="dash">
+<aside class="card">
+  <div class="row"><div class="avatar" id="av">N</div><div><h1 id="nm"></h1><div class="mute" id="sub"></div></div></div>
+  <p class="mute" id="mail" style="margin:10px 0 6px;overflow-wrap:anywhere"></p>
+  <div class="task"><b>Your assigned task</b><br><span id="tt"></span></div>
+  <h2>Internship progress</h2>
+  <div class="bar"><i id="pb"></i></div>
+  <div class="mute" id="pt"></div>
+  <h2 style="margin-top:16px">8-week roadmap</h2>
+  <ul class="road" id="road"></ul>
+  <p class="note"><button class="chip" id="reset">Reset progress</button> <button class="chip" id="out">Sign out</button></p>
+</aside>
+<main>
+  <div class="stats">
+    <div class="card stat"><span class="mute">Current week</span><b id="s1"></b></div>
+    <div class="card stat"><span class="mute">Review emails</span><b id="s2">0</b></div>
+    <div class="card stat"><span class="mute">Last verdict</span><b id="s3">—</b></div>
+  </div>
+  <div class="card">
+    <div class="tabs">
+      <button class="tab on" data-t="chat">💬 AI Mentor</button>
+      <button class="tab" data-t="task">📋 My Task</button>
+      <button class="tab" data-t="sub">📤 Submit Work</button>
+      <button class="tab" data-t="mail">📧 Review Email</button>
+    </div>
+    <section class="pane on" id="chat">
+      <div id="msgs"></div>
+      <div class="chips" id="chips"></div>
+      <div class="in"><input id="q" placeholder="Ask anything: your task, code errors, concepts, ideas…" autocomplete="off"><button class="go" id="send">Send</button></div>
+    </section>
+    <section class="pane" id="task"><div id="tb"></div></section>
+    <section class="pane" id="sub">
+      <p class="mute" id="mile"></p>
+      <textarea id="code" placeholder="Paste your code, README, notes or GitHub link for this week…"></textarea>
+      <div class="row" style="margin-top:10px"><button class="go" id="eval">Evaluate submission</button><span class="mute" id="evst"></span></div>
+      <div id="res" style="margin-top:14px"></div>
+    </section>
+    <section class="pane" id="mail">
+      <p class="mute">Review-meeting email for <b id="mto"></b>. Set the date, time and meeting link, then send.</p>
+      <div class="row" style="margin-bottom:10px;flex-wrap:wrap"><label class="mute">Date <input type="date" id="rd" style="flex:none"></label><label class="mute">Time <input type="time" id="rt" value="16:00" style="flex:none"></label><label class="mute" style="flex:1;min-width:220px">Meeting link <input id="ml" placeholder="https://meet.google.com/…"></label></div>
+      <div class="row" style="margin-bottom:10px;flex-wrap:wrap"><button class="go" id="mk">Build email</button><a class="go" id="mo" target="_blank" rel="noopener">✉️ Open in email app</a><button class="chip" id="cp">Copy</button></div>
+      <pre class="mail" id="mb">Evaluate a submission first. The review email is prepared automatically.</pre>
+      <p class="note">A web page cannot send mail by itself. “Open in email app” opens a ready email addressed to this candidate. For fully automatic sending to all 50, use the Python app (Automation.py) with SMTP settings.</p>
+    </section>
+  </div>
+</main>
+</div>
+
+<script>
+const CAT={
+tech:[
+["AI Fitness & Workout Planner","Build an app that turns a user’s profile and goal into an adaptive weekly workout plan.","Python,pandas,scikit-learn,Flask,SQLite,Streamlit,Git"],
+["Resume Screening & Job Matching System","Rank resumes against job descriptions using NLP and explain each match.","Python,spaCy,scikit-learn,pandas,Streamlit,Git"],
+["Student Performance Predictor","Predict student outcomes from academic and behavioural data and show insights.","Python,pandas,scikit-learn,matplotlib,Streamlit,Git"],
+["Smart Expense Tracker with AI Insights","Track expenses, categorise them automatically and forecast monthly spending.","Python,FastAPI,SQLite,pandas,scikit-learn,Git"],
+["Sentiment Analysis Dashboard","Collect reviews or tweets, classify sentiment and visualise trends.","Python,NLTK,scikit-learn,pandas,Streamlit,Git"]],
+elec:[
+["AI Fitness Planner with Wearable Sensor Data","Use heart-rate and accelerometer data (ESP32/Arduino or CSV) to personalise workout plans.","Python,pandas,NumPy,scikit-learn,Streamlit,ESP32/Arduino,Git"],
+["IoT Smart Home Monitor","Collect sensor data over MQTT, store it and show a live dashboard with alerts.","ESP32,MQTT,Python,SQLite,Streamlit,Git"],
+["Signal Classification with Machine Learning","Extract features from signals (ECG/vibration/audio) and classify them.","Python,NumPy,SciPy,scikit-learn,matplotlib,Git"],
+["Energy Consumption Predictor","Forecast electricity usage and recommend savings.","Python,pandas,scikit-learn,Streamlit,Git"],
+["Sensor Anomaly Detection System","Detect faulty readings in time-series sensor data and raise alerts.","Python,pandas,scikit-learn,SQLite,Streamlit,Git"]],
+core:[
+["Predictive Maintenance Estimator","Predict machine or structure failure risk from condition data.","Python,pandas,scikit-learn,matplotlib,Streamlit,Git"],
+["Material & Cost Estimation Tool","Estimate material quantities and project cost from user inputs.","Python,pandas,Streamlit,SQLite,Git"],
+["Load & Stress Data Analyzer","Analyse test data, plot results and flag safety limits.","Python,NumPy,SciPy,matplotlib,pandas,Git"],
+["Energy Audit Dashboard","Audit energy use of a building or plant and suggest improvements.","Python,pandas,Streamlit,scikit-learn,Git"],
+["Quality Control Defect Classifier","Classify defects from inspection data and track quality trends.","Python,pandas,scikit-learn,matplotlib,Git"]],
+other:[
+["Sales Forecasting Dashboard","Forecast sales and present insights in an interactive dashboard.","Python,pandas,scikit-learn,Streamlit,Git"],
+["Customer Segmentation System","Cluster customers by behaviour and recommend strategies.","Python,pandas,scikit-learn,matplotlib,Streamlit,Git"],
+["AI Study Planner","Create personalised study schedules from goals, subjects and deadlines.","Python,pandas,Flask,SQLite,Git"],
+["Survey Analysis Tool","Clean survey data, analyse it and generate report charts.","Python,pandas,matplotlib,Streamlit,Git"],
+["Personal Finance Advisor","Analyse income and spending and suggest budgets and goals.","Python,pandas,SQLite,Streamlit,Git"]]};
+const GRP=d=>/CSE|IT|AI/.test(d)?"tech":/ECE|EEE|EIE/.test(d)?"elec":/Mech|Civil/.test(d)?"core":"other";
+const hash=s=>{let h=5381;for(const c of s)h=((h<<5)+h+c.charCodeAt(0))>>>0;return h};
+const LVL={I:"foundation level (beginner friendly)",II:"foundation-plus level",III:"intermediate level",IV:"advanced capstone level"};
+const GEN=t=>[`Problem definition, inputs/outputs, dataset plan and GitHub repo for ${t}`,"Data collection and cleaning","Baseline (rule-based or simple) version","Core ML / analysis component","Backend and database","User interface connected to the backend","Testing, error handling and improvements","README, demo video, presentation and final review"];
+
+/* ===== OFFLINE ENGINE: answers without any AI (rule + knowledge-base driven) ===== */
+const MOD={
+"Python":"Main language. All scripts, data steps, models and the backend are written in it.",
+"pandas":"Load/clean tabular data: `pd.read_csv`, `dropna`, `fillna`, `groupby`, `merge`.",
+"NumPy":"Fast arrays and maths: mean, RMS, FFT, vector operations.",
+"scikit-learn":"Machine learning: `train_test_split`, models (RandomForest, KMeans, LogisticRegression), metrics.",
+"SciPy":"Scientific computing: signal filters, FFT, curve fitting, statistical tests.",
+"matplotlib":"Plots for EDA and results: line, bar, scatter, confusion matrix.",
+"spaCy":"NLP: tokenising, entity/skill extraction from text.",
+"NLTK":"NLP toolkit: stop-words, tokenisers, VADER sentiment baseline.",
+"Flask":"Lightweight web backend: routes (`@app.route`) that serve predictions/data as JSON.",
+"FastAPI":"Modern REST API with automatic docs at /docs; run with `uvicorn main:app --reload`.",
+"SQLite":"Built-in file database (`sqlite3`) to store users, readings, transactions.",
+"Streamlit":"Python-only web UI: inputs, buttons, charts in a few lines. Run: `streamlit run app.py`.",
+"MQTT":"Publish/subscribe messaging between sensor devices and your Python subscriber (`paho-mqtt`).",
+"ESP32":"Microcontroller that reads sensors and sends data over Wi-Fi/MQTT.",
+"ESP32/Arduino":"Microcontroller that reads sensors (HR, accelerometer) and streams/logs data to CSV or MQTT.",
+"Git":"Version control: commit every milestone, push to GitHub, write a good README."};
+const PIP={pandas:"pandas",NumPy:"numpy","scikit-learn":"scikit-learn",SciPy:"scipy",matplotlib:"matplotlib",spaCy:"spacy && python -m spacy download en_core_web_sm",NLTK:"nltk",Flask:"flask",FastAPI:"fastapi uvicorn",Streamlit:"streamlit",MQTT:"paho-mqtt"};
+// [program type, kind, algorithm/logic, dataset, output, target column]
+const PI={
+"AI Fitness & Workout Planner":["Recommendation app: supervised ML + rule engine + web UI","cls","RandomForest classifier picks the fitness level; rules adjust weekly sets/reps by goal","User profile CSV (age, weight, goal, level), Kaggle gym/fitness data","Adaptive 7-day workout plan","plan_level"],
+"Resume Screening & Job Matching System":["NLP text-matching system (unsupervised similarity ranking)","match","TF-IDF vectors + cosine similarity; spaCy extracts skills to explain each match","Kaggle resume dataset + sample job descriptions","Ranked candidates with matched/missing skills","-"],
+"Student Performance Predictor":["Supervised ML prediction + insights dashboard","cls","RandomForest / LogisticRegression; feature importance shows key factors","UCI Student Performance dataset","Pass/fail (or grade) prediction with insights","passed"],
+"Smart Expense Tracker with AI Insights":["REST backend (CRUD) + ML categoriser + forecaster","cls","TF-IDF + LogisticRegression to categorise; LinearRegression forecasts next month","Own transactions CSV / sample bank statement","Categorised expenses and monthly forecast","category"],
+"Sentiment Analysis Dashboard":["NLP text classification + visual dashboard","txt","VADER baseline, then TF-IDF + LogisticRegression/NaiveBayes","IMDB reviews or Twitter sentiment dataset","Sentiment label per text + trend charts","sentiment"],
+"AI Fitness Planner with Wearable Sensor Data":["Sensor data pipeline + ML personalisation","cls","Window features from heart-rate/accelerometer, RandomForest intensity classifier","ESP32 CSV logs or WISDM/PAMAP2 data","Personalised workout intensity plan","intensity"],
+"IoT Smart Home Monitor":["IoT publish/subscribe pipeline + live dashboard (no ML needed)","iot","MQTT pub/sub, threshold alert rules, SQLite logging","Live sensor readings (temp, humidity, motion)","Live dashboard with alerts","-"],
+"Signal Classification with Machine Learning":["Signal processing + supervised classification","cls","Features (mean, RMS, FFT peaks) with NumPy/SciPy, then SVM/RandomForest","MIT-BIH ECG, CWRU vibration or audio clips","Signal class + confusion matrix","label"],
+"Energy Consumption Predictor":["Time-series regression / forecasting","reg","Lag + calendar features with RandomForest/LinearRegression","UCI household power consumption","Next-day usage forecast and saving tips","consumption_kwh"],
+"Sensor Anomaly Detection System":["Unsupervised anomaly detection on time series","anom","IsolationForest + rolling z-score threshold","NAB dataset or sensor CSV with injected faults","Flagged faulty readings and alerts","-"],
+"Predictive Maintenance Estimator":["Supervised classification (failure risk)","cls","RandomForest with `predict_proba` as risk %","NASA C-MAPSS or AI4I 2020 dataset","Failure risk % with chart","failure"],
+"Material & Cost Estimation Tool":["Rule-based calculation tool (formula engine + UI)","rule","Engineering formulas (volume x rate) + lookup table of unit costs","Own rate table (CSV/SQLite)","Quantity and cost estimate report","-"],
+"Load & Stress Data Analyzer":["Numerical analysis and visualisation program","rule","Stress = Force/Area, yield-limit checks, curve fitting with SciPy","Tensile/load-test CSV","Stress-strain plot with safety flags","-"],
+"Energy Audit Dashboard":["Analytics dashboard with rule-based recommendations","rule","Aggregation, baseline comparison, savings rules","Monthly bills / meter readings CSV","Audit dashboard and savings list","-"],
+"Quality Control Defect Classifier":["Supervised classification on inspection data","cls","DecisionTree/RandomForest + control-chart trends","UCI Steel Plates Faults or NEU defect data","Defect type and quality trend","defect"],
+"Sales Forecasting Dashboard":["Time-series regression + interactive dashboard","reg","Month/lag features + RandomForest or LinearRegression","Kaggle store sales data","Sales forecast chart","sales"],
+"Customer Segmentation System":["Unsupervised clustering","clu","KMeans with elbow/silhouette; RFM features","Mall Customers or Online Retail dataset","Customer segments with strategies","-"],
+"AI Study Planner":["Scheduling algorithm + web app (rule-based)","rule","Priority = urgency x difficulty; greedy time-slot allocation","User-entered subjects/deadlines in SQLite","Personalised study timetable","-"],
+"Survey Analysis Tool":["Data cleaning + statistics + report generation","rule","Descriptive stats, crosstabs, chi-square test","Google Forms survey CSV","Charts and summary report","-"],
+"Personal Finance Advisor":["Budget analysis app with rule-based advice","rule","50/30/20 rule, savings-goal projection","Income/expense entries in SQLite","Budget plan and goal tracker","-"]};
+const WTIP=["Define inputs/outputs, pick the dataset, create the GitHub repo and README skeleton.","Load the data with pandas, handle missing values and duplicates, and plot basic EDA charts.","Build a simple baseline (rules or mean predictor) and record its score to beat later.","Train the core model/analysis, evaluate it with proper metrics and save it (`joblib.dump`).","Add the backend and database layer (tables, insert/read functions, API routes).","Build the UI and connect it to the backend/model.","Add input validation, try/except, unit tests and fix bugs.","Finish README (setup, usage, screenshots), record a demo video and prepare the presentation."];
+const F="```";
+function codeFor(b,pi){const k=pi[1],t=pi[5],M=b.modules.join(" ").toLowerCase();
+ const L={
+ cls:`import pandas as pd, joblib\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.metrics import classification_report\n\ndf = pd.read_csv("data.csv").dropna()\nX = pd.get_dummies(df.drop(columns=["${t}"])); y = df["${t}"]\nXtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.2, random_state=42)\nmodel = RandomForestClassifier(n_estimators=200).fit(Xtr, ytr)\nprint(classification_report(yte, model.predict(Xte)))\njoblib.dump(model, "model.pkl")`,
+ txt:`import pandas as pd\nfrom sklearn.feature_extraction.text import TfidfVectorizer\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.model_selection import train_test_split\n\ndf = pd.read_csv("reviews.csv").dropna()\nXtr, Xte, ytr, yte = train_test_split(df["text"], df["${t}"], test_size=0.2)\nvec = TfidfVectorizer(stop_words="english"); clf = LogisticRegression(max_iter=500)\nclf.fit(vec.fit_transform(Xtr), ytr)\nprint("Accuracy:", clf.score(vec.transform(Xte), yte))\nprint(clf.predict(vec.transform(["Great product, loved it!"])))`,
+ reg:`import pandas as pd\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.ensemble import RandomForestRegressor\nfrom sklearn.metrics import mean_absolute_error\n\ndf = pd.read_csv("data.csv").dropna()\ndf["lag1"] = df["${t}"].shift(1); df = df.dropna()\nX = df.drop(columns=["${t}"]).select_dtypes("number"); y = df["${t}"]\nXtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.2, shuffle=False)\nm = RandomForestRegressor(n_estimators=200).fit(Xtr, ytr)\nprint("MAE:", mean_absolute_error(yte, m.predict(Xte)))`,
+ clu:`import pandas as pd\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.cluster import KMeans\n\ndf = pd.read_csv("customers.csv").dropna()\nX = StandardScaler().fit_transform(df.select_dtypes("number"))\ndf["segment"] = KMeans(n_clusters=4, n_init=10, random_state=42).fit_predict(X)\nprint(df.groupby("segment").mean(numeric_only=True))`,
+ anom:`import pandas as pd\nfrom sklearn.ensemble import IsolationForest\n\ndf = pd.read_csv("sensor.csv").dropna()\niso = IsolationForest(contamination=0.02, random_state=42)\ndf["anomaly"] = iso.fit_predict(df[["value"]])   # -1 = anomaly\nprint(df[df["anomaly"] == -1])`,
+ match:`import pandas as pd\nfrom sklearn.feature_extraction.text import TfidfVectorizer\nfrom sklearn.metrics.pairwise import cosine_similarity\n\nresumes = pd.read_csv("resumes.csv")["text"].tolist()\njd = "Python developer with machine learning and SQL"\nvec = TfidfVectorizer(stop_words="english")\nM = vec.fit_transform(resumes + [jd])\nscores = cosine_similarity(M[-1], M[:-1]).ravel()\nprint(sorted(enumerate(scores), key=lambda x: -x[1])[:5])`,
+ iot:`import sqlite3, paho.mqtt.client as mqtt\n\ndb = sqlite3.connect("iot.db")\ndb.execute("CREATE TABLE IF NOT EXISTS readings(ts DEFAULT CURRENT_TIMESTAMP, topic TEXT, value REAL)")\ndef on_message(c, u, msg):\n    v = float(msg.payload); db.execute("INSERT INTO readings(topic,value) VALUES(?,?)", (msg.topic, v)); db.commit()\n    if v > 40: print("ALERT: high value", v)\nc = mqtt.Client(); c.on_message = on_message\nc.connect("broker.hivemq.com", 1883); c.subscribe("home/#"); c.loop_forever()`,
+ rule:`import pandas as pd\nimport matplotlib.pyplot as plt\n\ndf = pd.read_csv("data.csv").dropna()\ndef analyse(row):\n    # put your project formula / rule here\n    return row.iloc[0] * row.iloc[1]\ndf["result"] = df.apply(analyse, axis=1)\nprint(df.describe())\ndf["result"].plot(kind="bar"); plt.show()`};
+ let c=L[k]||L.rule;
+ if(/sqlite/.test(M)&&k!="iot")c+=`\n\n# --- database layer (SQLite) ---\nimport sqlite3\ndb = sqlite3.connect("app.db")\ndb.execute("CREATE TABLE IF NOT EXISTS records(id INTEGER PRIMARY KEY, name TEXT, value REAL)")\ndb.execute("INSERT INTO records(name,value) VALUES(?,?)", ("sample", 1.0)); db.commit()`;
+ if(/flask/.test(M))c+=`\n\n# --- backend (Flask) ---\nfrom flask import Flask, jsonify\napp = Flask(__name__)\n@app.route("/health")\ndef health(): return jsonify(status="ok")\n# app.run(debug=True)`;
+ else if(/fastapi/.test(M))c+=`\n\n# --- backend (FastAPI) ---\nfrom fastapi import FastAPI\napp = FastAPI()\n@app.get("/health")\ndef health(): return {"status": "ok"}`;
+ if(/streamlit/.test(M))c+=`\n\n# --- UI (save as app.py, run: streamlit run app.py) ---\nimport streamlit as st\nst.title("${b.title}")\nx = st.number_input("Enter a value")\nif st.button("Run"): st.success(f"Result: {x}")   # replace with model.predict(...)`;
+ return F+"python\n"+c+"\n"+F}
+
+function offline(q){
+ const b=st.brief,t=q.toLowerCase(),pi=PI[b.title]||["Python data application","rule","Data analysis and rules","Public CSV dataset","Dashboard","-"],w=wk(),has=r=>r.test(t);
+ const modList=()=>b.modules.map(m=>`- **${m}**: ${MOD[m]||"Supporting tool for this project."}`).join("\n");
+ const pips=b.modules.map(m=>PIP[m]).filter(Boolean).map(x=>x.split(" && ")[0]).join(" ");
+ const head=`**${b.title}** (Week ${w}/8)\n\n`;
+ if(has(/sample|example|code|program|script|snippet|implement.*python|python.*(sample|code)/)&&!has(/type of|what (type|kind)/))
+  return head+`Starter program for this project (${pi[0]}):\n\n`+codeFor(b,pi)+`\nReplace the file/column names with your own dataset, then run it step by step.`;
+ if(has(/type of|what (type|kind)|which type|kind of|architecture|approach|how (is|does) it work|workflow|pipeline|flow/))
+  return head+`**Type of program:** ${pi[0]}\n**Core logic / algorithm:** ${pi[2]}\n**Input data:** ${pi[3]}\n**Output:** ${pi[4]}\n\n**Flow:** Data collection → Cleaning (pandas) → ${pi[1]=="rule"||pi[1]=="iot"?"Rules/processing":"Model training & evaluation"} → ${/sqlite/i.test(b.modules)?"Store in SQLite → ":""}${/flask|fastapi/i.test(b.modules)?"API → ":""}${/streamlit/i.test(b.modules)?"Streamlit UI":"Output/report"}`;
+ if(has(/module|librar|package|tool|tech stack|require|install|dependenc/)&&!has(/week|milestone/))
+  return head+`Modules you must use:\n${modList()}\n\n**Install:** \`pip install ${pips}\`\n(Git is installed separately from git-scm.com.)`;
+ if(has(/algorithm|model|which ml|technique|method|classif|predict/)&&!has(/week/))
+  return head+`**Algorithm / logic:** ${pi[2]}\n**Program type:** ${pi[0]}\n**Why:** it suits the data (${pi[3]}) and produces: ${pi[4]}.\n\nTip: always compare it with a simple baseline first, then report accuracy/MAE and a confusion matrix or chart.`;
+ if(has(/dataset|data set|data source|where.*data|csv|kaggle|collect/))
+  return head+`**Dataset:** ${pi[3]}\n\nSteps: download the CSV, keep it in a \`data/\` folder (not committed if large), load with \`pd.read_csv\`, check \`df.info()\`, \`df.isna().sum()\`, remove duplicates, and plot distributions before modelling.`;
+ if(has(/start|begin|first step|get started|setup|set up|where do i/))
+  return head+`How to start:\n1. Create a GitHub repo and a virtual env: \`python -m venv venv\`\n2. Install modules: \`pip install ${pips}\`\n3. Download the dataset: ${pi[3]}\n4. Write a 5-line problem statement (input → ${pi[4]})\n5. Week 1 goal: ${MS()[0]}\n\nAsk "Give me a Python sample" for starter code.`;
+ if(has(/database|sqlite|sql\b|store/))
+  return head+(/sqlite/i.test(b.modules)?`Use **SQLite** (\`import sqlite3\`): create tables in a \`CREATE TABLE IF NOT EXISTS\` call, insert with parameterised queries (\`?\`), and read with \`SELECT\` into pandas via \`pd.read_sql\`. Keep DB code in its own file (db.py).`:`SQLite is not required here; keep data in CSV/pandas, or add \`sqlite3\` if you need persistence.`);
+ if(has(/ui|interface|streamlit|frontend|front end|dashboard|flask|fastapi|api|backend/))
+  return head+`**UI/Backend modules for this task:** ${b.modules.filter(m=>/streamlit|flask|fastapi/i.test(m)).join(", ")||"none required (use matplotlib charts/CLI)"}.\nKeep logic in functions (model.py, db.py), and let the UI/API only call them. Run UI with \`streamlit run app.py\` or API with \`flask run\`/\`uvicorn\`.`;
+ if(has(/test|bug|error|debug|fail|exception|not working|issue/))
+  return head+`Debug checklist:\n- Read the last line of the traceback first\n- Print \`df.shape\`, \`df.dtypes\`, \`df.isna().sum()\`\n- Check column names (typos/spaces) and file path\n- Wrap risky code in \`try/except\` and validate inputs\n- Add 3-5 \`assert\` tests for your key functions\n\nPaste the error text in the Submit tab for a review.`;
+ if(has(/git|github|readme|demo|presentation|deliverable|submit/))
+  return head+`**Final deliverable:** ${b.deliverable}\n\nREADME sections: Problem, Dataset, Modules used, How to run, Results (screenshots/metrics), Future work. Commit weekly: \`git add . && git commit -m "week ${w}" && git push\`.`;
+ if(has(/week|milestone|roadmap|this week|plan|schedule|deadline/))
+  return head+`**This week (Week ${w}):** ${MS()[w-1]}\n**How:** ${WTIP[w-1]}\n**Deadline:** end of this week, submit in the Submit tab.\n**Next week:** ${MS()[w]||"Final review"}`;
+ if(has(/idea|review|feedback|improve|enhance|feature/))
+  return head+`To review an idea, paste it in the **Submit Work** tab; it checks it against your modules and this week's milestone. Good extras for this task: model comparison table, input validation, saved model (joblib), charts for results, and a clear README.`;
+ for(const m of Object.keys(MOD)){const k=m.toLowerCase().split("/")[0];if(t.includes(k))return head+`**${m}**: ${MOD[m]}\n\nIn your project it is used for: ${pi[0]}. ${PIP[m]?"Install: `pip install "+PIP[m].split(" && ")[0]+"`":""}`}
+ if(has(/^(hi|hello|hey)\b/))return `Hi ${P.name}! Ask me about your modules, program type, algorithm, dataset, this week's task, or request a Python sample.`;
+ if(has(/task|project|objective|explain|about|what/))
+  return head+`${b.objective}\n\n**Program type:** ${pi[0]}\n**Modules:** ${b.modules.join(", ")}\n**Output:** ${pi[4]}\n**This week:** ${MS()[w-1]}`;
+ return head+`I can answer about your task. Try:\n- "Which modules do I need?"\n- "What type of program is this?"\n- "Which algorithm?" / "Which dataset?"\n- "How do I start?" / "Explain this week's task"\n- "Give me a Python sample"`}
+
+function offlineEval(txt){
+ const b=st.brief,t=txt.toLowerCase(),w=st.week;
+ const used=b.modules.filter(m=>m.toLowerCase().split("/").some(k=>t.includes(k))),miss=b.modules.filter(m=>!used.includes(m));
+ const WK=[["readme","input","output","dataset","git"],["read_csv","dropna","fillna","clean"],["baseline","rule","mean","accuracy"],["fit","train","predict","score","model"],["sqlite","database","route","flask","fastapi","connect"],["streamlit","button","ui","st."],["try","except","assert","test"],["readme","usage","demo","install"]];
+ const kw=WK[w-1],hit=kw.filter(k=>t.includes(k)),codey=/def |import |class |=|\(/.test(txt);
+ const align=Math.round(100*(.5*used.length/b.modules.length+.5*hit.length/kw.length));
+ let score=Math.round(1+4*used.length/b.modules.length+3*hit.length/kw.length+(txt.length>400?1:0)+(codey?1:0));score=Math.max(0,Math.min(10,score));
+ const ok=score>=6&&txt.length>=300&&hit.length>=Math.ceil(kw.length/2),ch=[];
+ if(txt.length<300)ch.push({area:"Whole submission",problem:"Too short to evaluate",why:"A weekly submission needs real code/notes",how_to_fix:"Paste your code or README section for this week",priority:"high"});
+ kw.filter(k=>!hit.includes(k)).slice(0,3).forEach(k=>ch.push({area:"Week "+w+" milestone",problem:`No sign of "${k}"`,why:`Milestone: ${MS()[w-1]}`,how_to_fix:`Add/show ${k} in your work for this week`,priority:hit.length?"medium":"high"}));
+ if(miss.length)ch.push({area:"Module usage",problem:"Modules not found: "+miss.join(", "),why:`Required for "${b.title}"`,how_to_fix:"Import and use each required module where it fits",priority:"medium"});
+ return{verdict:ok?"pass":"revise",score,task_alignment:align,strengths:[used.length?"Uses modules: "+used.join(", "):"",hit.length?"Covers: "+hit.join(", "):"",codey?"Contains real code":""].filter(Boolean),changes_required:ch,modules_missing:miss,next_week_focus:MS()[Math.min(w,7)],feedback:ok?`Good Week ${w} work. It covers the milestone and ${used.length}/${b.modules.length} required modules. Fix the small points below and move on.`:`Week ${w} is not complete yet. Matched ${used.length}/${b.modules.length} modules and ${hit.length}/${kw.length} milestone checks. Address the changes below and resubmit.`,review_topics:["Walkthrough of Week "+w+" work","Fixes for the listed changes","Plan for Week "+(w+1)]}}
+
+let P=null,st=null,sample=null,busy=false,hist=[];
+const $=i=>document.getElementById(i);
+const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const key=e=>"ib:"+e.toLowerCase();
+const save=()=>{try{localStorage.setItem(key(P.email),JSON.stringify({P,st}))}catch(e){}};
+function md(t){return esc(t).replace(/```[a-z]*\n?([\s\S]*?)```/g,"<pre class='mail'>$1</pre>").replace(/`([^`]+)`/g,"<code>$1</code>").replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>").replace(/^\s*[-•*] (.*)$/gm,"• $1").replace(/\n/g,"<br>")}
+async function ai(){if(sample)return sample;try{sample=await claude.use("sample")}catch(e){}return sample}
+const MS=()=>st.brief.milestones;
+const wk=()=>Math.min(st.week,8);
+
+function ctx(){const b=st.brief;return `You are an empathetic, expert AI Internship Mentor and general assistant. Answer ANY question accurately and clearly (programming, ML, electronics, career, general knowledge) and tie it to the intern’s project when relevant. Be warm, concise and rigorous; use bullets and code blocks when useful.
+Intern: ${P.name}, ${P.dept}, ${P.college}, Year ${P.year}. Assigned task: ${b.title}. Objective: ${b.objective}. Required modules: ${b.modules.join(", ")}. References: ${b.refs.join("; ")}. Deadline: end of each week. Current week ${wk()} of 8: ${MS()[wk()-1]}.${st.last?" Latest feedback: "+st.last.feedback:""}`}
+
+async function makeBrief(){
+ const g=CAT[GRP(P.dept)],c=g[hash(P.email.toLowerCase())%g.length];
+ let b={title:c[0],objective:c[1],modules:c[2].split(","),refs:["Official documentation of each required module","Kaggle datasets and tutorials relevant to the task","GitHub Docs (version control basics)"],milestones:GEN(c[0]),deliverable:"Working project, GitHub repo, README and demo video"};
+ try{const s=await ai();if(s){
+  const r=await s(`Create a personalised internship brief. Intern: ${P.name}, ${P.dept}, ${P.college}, Year ${P.year} (${LVL[P.year]}). Assigned task: "${c[0]}" - ${c[1]}. Base modules: ${c[2]}.
+Tailor the scope and difficulty to the intern’s department and year (use strengths of ${P.dept}). Return ONLY valid JSON, no fences:
+{"objective":"2 sentences","modules":["6-8 modules/libraries/tools"],"refs":["5-6 reading items: official doc or guideline NAMES only, no URLs"],"milestones":["exactly 8 weekly milestones, week 1 to 8, each one concrete sentence"],"deliverable":"final deliverable in one sentence"}`,{cache:true});
+  const j=JSON.parse(r.text.slice(r.text.indexOf("{"),r.text.lastIndexOf("}")+1));
+  if(j.milestones&&j.milestones.length==8&&j.modules&&j.refs)b=Object.assign(b,j)}}catch(e){}
+ return b}
+
+function render(){
+ $("av").textContent=P.name[0].toUpperCase();$("nm").textContent=P.name;$("sub").textContent=`${P.dept} · ${P.college} · Year ${P.year}`;$("mail").textContent=P.email;$("tt").textContent=st.brief.title;$("mto").textContent=P.email;if(!$("ml").value)$("ml").value=st.mlink||"";
+ const done=st.week>8?8:st.week-1,pct=Math.round(done/8*100);
+ $("pb").style.width=pct+"%";$("pt").textContent=st.week>8?"Internship complete! 🎉":`${pct}% complete · Week ${st.week} of 8`;
+ $("road").innerHTML=MS().map((m,i)=>`<li class="${i+1<st.week?"done":i+1==st.week?"cur":""}"><span class="n">${i+1<st.week?"✓":i+1}</span><span>${esc(m)}</span></li>`).join("");
+ $("s1").textContent=st.week>8?"Done":st.week;$("s2").textContent=st.sent;$("s3").textContent=st.verdict;
+ $("mile").innerHTML=st.week>8?"All weeks complete.":`<b>Week ${st.week}:</b> ${esc(MS()[st.week-1])}`;
+ const b=st.brief;
+ $("tb").innerHTML=`<h2 style="font-size:18px">${esc(b.title)}</h2><p>${esc(b.objective)}</p><h2>Modules you must use</h2><p>${b.modules.map(m=>`<code class="m" style="display:inline-block;padding:2px 8px;margin:2px">${esc(m)}</code>`).join("")}</p><h2>Reference reading</h2><p>${b.refs.map(r=>"• "+esc(r)).join("<br>")}</p><h2>Final deliverable</h2><p>${esc(b.deliverable)}</p><h2>Deadline</h2><p>End of every week, submit your work in the Submit tab.</p>`;
+ if(st.week>8)addCert()}
+function addCert(){if($("cert"))return;const b=document.createElement("button");b.id="cert";b.className="go";b.textContent="🎓 Download certificate";b.style.marginTop="12px";b.onclick=async()=>{
+ const h=`<html><body style="font-family:Georgia;text-align:center;border:12px double #3b5bdb;padding:60px;margin:30px"><h1>Certificate of Completion</h1><p>This certifies that</p><h2>${esc(P.name)}</h2><p>${esc(P.dept)}, ${esc(P.college)}</p><p>has completed the 8-week internship project</p><h3>${esc(st.brief.title)}</h3><p>${new Date().toDateString()}</p></body></html>`;
+ try{const d=await claude.use("downloads");if(d)await d.save({filename:"certificate.html",data:h})}catch(e){}};$("mile").after(b)}
+
+function bubble(c,t){const d=document.createElement("div");d.className="m "+c;d.innerHTML=t;$("msgs").appendChild(d);$("msgs").scrollTop=1e9;return d}
+function enter(){
+ $("reg").classList.add("hide");$("dash").classList.remove("hide");hist=[];$("msgs").innerHTML="";$("res").innerHTML="";$("ml").value=st.mlink||"";$("mb").textContent="Evaluate a submission first. The review email is prepared automatically.";$("mo").removeAttribute("href");const c=$("cert");if(c)c.remove();
+ render();const b=st.brief;
+ bubble("bot",md(`Hi **${P.name}**! 👋 Welcome from **${P.dept}, ${P.college}** (Year ${P.year}).\n\nYour assigned task: **${b.title}**\n${b.objective}\n\nModules: ${b.modules.join(", ")}\nThis week (Week ${wk()}): ${MS()[wk()-1]}\nDeadline: end of this week.\n\nAsk me anything about it, or open the **My Task** tab for the full brief.`))}
+
+$("rgo").onclick=async()=>{
+ const v=i=>$(i).value.trim(),e=v("re");
+ if(!v("rn")||!v("rc")||!/^\S+@\S+\.\S+$/.test(e)){$("rerr").textContent="Please fill every field with a valid email.";return}
+ $("rerr").textContent="";$("rgo").disabled=true;$("rgo").textContent="Assigning your task…";
+ let saved=null;try{saved=JSON.parse(localStorage.getItem(key(e))||"null")}catch(x){}
+ if(saved&&saved.st&&saved.st.brief){P=saved.P;st=saved.st}
+ else{P={name:v("rn"),email:e,college:v("rc"),dept:$("rd2").value,year:$("ry").value};
+  st={week:1,sent:0,verdict:"—",last:null,brief:null};st.brief=await makeBrief();save()}
+ $("rgo").disabled=false;$("rgo").textContent="Get my task";enter()};
+$("out").onclick=()=>{P=null;st=null;$("dash").classList.add("hide");$("reg").classList.remove("hide")};
+$("reset").onclick=()=>{st.week=1;st.sent=0;st.verdict="—";st.last=null;save();enter()};
+
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab,.pane").forEach(x=>x.classList.remove("on"));b.classList.add("on");$(b.dataset.t).classList.add("on")});
+["Explain this week’s task","Which modules do I need?","How do I start?","What type of program is this?","Which algorithm?","Which dataset?","Give me a Python sample"].forEach(t=>{const b=document.createElement("button");b.className="chip";b.textContent=t;b.onclick=()=>{$("q").value=t;send()};$("chips").appendChild(b)});
+async function send(){
+ const t=$("q").value.trim();if(!t||busy||!st)return;$("q").value="";busy=true;$("send").disabled=true;
+ bubble("me",esc(t));hist.push({role:"user",content:t});
+ const msgs=hist.slice(-14).map((m,i)=>i==0&&m.role=="user"?{role:"user",content:ctx()+"\n\n---\n"+m.content}:m);
+ if(msgs[0].role!="user")msgs.unshift({role:"user",content:ctx()+"\n\nContinue the conversation."});
+ const b=bubble("bot",'<span class="dots"><span></span><span></span><span></span></span>');
+ try{const s=await ai();let txt;
+  if(!s){await new Promise(r=>setTimeout(r,350));txt=offline(t)}
+  else{const r=await s(msgs,{cache:false,onText:({text})=>{b.innerHTML=md(text);$("msgs").scrollTop=1e9}});txt=r.text}
+  b.innerHTML=md(txt);hist.push({role:"assistant",content:txt});
+ }catch(e){hist.pop();b.innerHTML=e&&e.code=="not_granted"?"Permission was declined. Reload and allow Claude access to use the AI mentor.":e&&e.code=="rate_limited"?"Too many requests. Please wait a moment and try again.":"The AI isn’t available in this view. Open the published link in claude.ai and allow access."}
+ busy=false;$("send").disabled=false;$("q").focus()}
+$("send").onclick=send;$("q").onkeydown=e=>{if(e.key=="Enter")send()};
+
+$("eval").onclick=async()=>{
+ const t=$("code").value.trim();if(!t){$("evst").textContent="Paste your work first.";return}
+ if(st.week>8)return;$("eval").disabled=true;$("evst").textContent="Evaluating against your assigned task…";
+ const p=`${ctx()}\n\nReview the intern’s Week ${st.week} submission. Compare it strictly against (1) the assigned task "${st.brief.title}" and its objective, (2) the required modules, and (3) this week’s milestone: ${MS()[st.week-1]}. Name the exact file, function or section for every problem. If the submission is missing, off-topic or too thin, say so and give verdict "revise". Return ONLY valid JSON, no fences:\n{"verdict":"pass"|"revise","score":0-10,"task_alignment":0-100,"strengths":["..."],"changes_required":[{"area":"file/function/section","problem":"what is wrong or missing","why":"why it matters for THIS task","how_to_fix":"concrete steps","priority":"high"|"medium"|"low"}],"modules_missing":["required modules not used"],"next_week_focus":"one sentence","feedback":"3-4 sentence mentor summary","review_topics":["3-5 agenda points"]}\n\nSUBMISSION:\n${t.slice(0,20000)}`;
+ try{const s=await ai();let j;
+  if(!s)j=offlineEval(t);else{const r=await s(p,{cache:false});j=JSON.parse(r.text.slice(r.text.indexOf("{"),r.text.lastIndexOf("}")+1))}
+  st.last=j;st.lastWeek=st.week;st.verdict=j.verdict.toUpperCase();if(j.verdict=="pass")st.week++;save();
+  showRes(j);$("evst").textContent="";render();buildMail()
+ }catch(e){$("evst").textContent=e&&e.code=="not_granted"?"Permission declined.":"Evaluation failed. Please try again."}
+ $("eval").disabled=false};
+function showRes(j){
+ const o={high:0,medium:1,low:2},ch=(j.changes_required||[]).slice().sort((a,b)=>(o[a.priority]??3)-(o[b.priority]??3));
+ $("res").innerHTML=`<span class="badge ${j.verdict}">${esc(j.verdict.toUpperCase())}</span><div class="sc"><div>Score <b>${esc(j.score??"–")}/10</b></div><div>Task match <b>${esc(j.task_alignment??"–")}%</b></div></div><p>${md(j.feedback||"")}</p>`
+ +((j.strengths||[]).length?`<h2>✅ Done well</h2><p>${j.strengths.map(x=>"• "+esc(x)).join("<br>")}</p>`:"")
+ +`<h2>🛠 What needs to be changed (for “${esc(st.brief.title)}”)</h2>`
+ +(ch.length?ch.map(c=>`<div class="mis"><b>${esc(c.area)}</b><span class="pri ${esc(c.priority)}">${esc((c.priority||"").toUpperCase())}</span><br><b>Problem:</b> ${esc(c.problem)}<br><b>Why:</b> ${esc(c.why)}<br><b>Fix:</b> ${esc(c.how_to_fix)}</div>`).join(""):"<p>No changes needed. Great work!</p>")
+ +((j.modules_missing||[]).length?`<p class="mute">Required modules not used yet: ${esc(j.modules_missing.join(", "))}</p>`:"")
+ +(j.next_week_focus?`<h2>🎯 Next focus</h2><p>${esc(j.next_week_focus)}</p>`:"")
+ +`<p class="note">📧 Your review-meeting email is ready in the <b>Review Email</b> tab.</p>`}
+
+const d=new Date();d.setDate(d.getDate()+2);$("rd").value=d.toISOString().slice(0,10);
+function buildMail(){
+ if(!st.last){$("mb").textContent="Evaluate a submission first.";return}
+ st.mlink=$("ml").value.trim();save();
+ if(!st.mlink){$("mb").textContent="Enter the meeting link above, then click Build email.";$("mo").removeAttribute("href");return}
+ const dt=new Date($("rd").value+"T"+$("rt").value),w=st.lastWeek||wk(),j=st.last;
+ const ch=(j.changes_required||[]).slice(0,4).map(c=>`- [${(c.priority||"").toUpperCase()}] ${c.area}: ${c.problem} → ${c.how_to_fix}`).join("\n")||"- No major changes needed";
+ const ag=(j.review_topics||["Walkthrough of this week’s work","Plan for next week"]).map(x=>"- "+x).join("\n");
+ const subj=`Week ${w} Review Meeting: ${dt.toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}`;
+ const body=`Dear ${P.name},\n\nYour Week ${w} review meeting is scheduled. Please attend.\n\nIntern: ${P.name} (${P.email}) | ${P.dept}, ${P.college}, Year ${P.year}\nTask: ${st.brief.title}\nDate & Time: ${dt.toLocaleString([], {dateStyle:"full",timeStyle:"short"})}\nMeeting link: ${st.mlink}\n\nResult of your Week ${w} submission: ${(j.verdict||"").toUpperCase()} (score ${j.score??"–"}/10)\n${j.feedback||""}\n\nChanges required before the meeting:\n${ch}\n\nAgenda:\n${ag}\n\nBest regards,\nInternship Program Team`;
+ $("mb").textContent=`To: ${P.email}\nSubject: ${subj}\n\n${body}`;
+ $("mo").href="mailto:"+encodeURIComponent(P.email)+"?subject="+encodeURIComponent(subj)+"&body="+encodeURIComponent(body)}
+$("mk").onclick=buildMail;
+$("mo").onclick=()=>{if(st&&$("mo").getAttribute("href")){st.sent++;save();render()}};
+$("cp").onclick=()=>{try{navigator.clipboard.writeText($("mb").textContent)}catch(e){}if(st&&st.last){st.sent++;save();render()}};
+</script>
+</body>
+</html>
